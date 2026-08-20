@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Resume Optimizer Dashboard</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid #1e293b}
+.header h1{font-size:24px;color:#f8fafc}
+.section{background:#1e293b;border-radius:12px;padding:24px;margin-bottom:20px}
+.section h2{font-size:18px;margin-bottom:16px;color:#f1f5f9}
+.btn{padding:10px 20px;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer}
+.btn-primary{background:#3b82f6;color:white}
+.btn-secondary{background:#334155;color:#e2e8f0}
+.score-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-weight:bold;font-size:18px}
+.score-green{background:#064e3b;color:#34d399}
+.score-yellow{background:#451a03;color:#fbbf24}
+.opt-card{background:#0f172a;padding:16px;border-radius:8px;margin-bottom:12px;border-left:4px solid #3b82f6}
+.opt-card .sec{font-size:12px;color:#60a5fa;text-transform:uppercase;margin-bottom:4px}
+.opt-card .orig{color:#f87171;text-decoration:line-through;margin-bottom:4px}
+.opt-card .optimized{color:#34d399}
+.empty{text-align:center;padding:60px;color:#64748b}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState}=React;
+const API=window.location.origin.replace(':8103',':8102');
+function App(){
+  const[file,setFile]=useState(null);
+  const[result,setResult]=useState(null);
+  const upload=async()=>{
+    if(!file)return;
+    const fd=new FormData();fd.append("file",file);
+    const r=await fetch(`${API}/analyze`,{method:"POST",body:fd});
+    const d=await r.json();
+    const r2=await fetch(`${API}/analyses/${d.analysis_id}`);
+    const d2=await r2.json();setResult(d2);setFile(null);
+  };
+  const scoreClass=s=>s>=70?'score-green':'score-yellow';
+  return(
+    <div className="container">
+      <div className="header"><h1>📋 Resume Optimizer</h1></div>
+      <div className="section">
+        <h2>Upload Resume</h2>
+        <input type="file" accept=".txt,.md" onChange={e=>setFile(e.target.files[0])}/>
+        <button className="btn btn-primary" onClick={upload} style={{marginLeft:"12px"}}>Analyze</button>
+      </div>
+      {result&&(
+        <div className="section">
+          <h2>Analysis Results</h2>
+          <div className="score-badge score-yellow">ATS Score: {result.ats_score}/100</div>
+          <h3 style={{margin:'20px 0 12px'}}>Optimizations</h3>
+          {(result.optimizations||[]).map(o=>(
+            <div key={o.id} className="opt-card">
+              <div className="sec">{o.section} — {o.impact} impact</div>
+              <div className="orig">❌ {o.original}</div>
+              <div className="optimized">✅ {o.optimized}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
