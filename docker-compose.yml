@@ -2,15 +2,16 @@ version: "3.8"
 
 services:
   resume-optimizer-api:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: resume-optimizer-api
     ports:
-      - "8102:8000"
+      - "8109:8000"
     env_file:
       - .env
     volumes:
       - ./data:/app/data
-      - ./uploads:/app/uploads
       - ./output:/app/output
     restart: unless-stopped
     healthcheck:
@@ -23,7 +24,7 @@ services:
     image: nginx:alpine
     container_name: resume-optimizer-dashboard
     ports:
-      - "8103:80"
+      - "8110:80"
     volumes:
       - ./src/dashboard/public:/usr/share/nginx/html
     restart: unless-stopped
